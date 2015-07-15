@@ -68,8 +68,9 @@ mkdir(home);
 var key = 'xxxxxxxx-xxxxxx-xxxxxx-xxxxxxxx';
 var preferences = home + '/preferences.json';
 touch(preferences, JSON.stringify({
-    target: 'http://up.hype.network',
+    target: 'up.hype.network',
     key: key,
+    port: 80,
 }, null, 2));
 
 // == Read in preferences
@@ -121,8 +122,8 @@ function upload(file) {
     });
 
     var opts = {
-        hostname: 'up.hype',
-        port: 8000,
+        hostname: options.target,
+        port: options.port,
         path: '/',
         method: 'POST',
         headers: {
