@@ -2,7 +2,7 @@
   "name": "upload",
   "version": "0.0.0",
   "description": "Upload files to hype.network",
-  "main": "index.js",
+  "main": "upload",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lukevers/upload.git"
