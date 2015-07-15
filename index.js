@@ -1,0 +1,149 @@
+'use strict';
+
+// ==
+
+var os          = require('os');
+var fs          = require('fs');
+var read        = require('readline');
+var http        = require('http');
+var querystring = require('querystring');
+var path        = require('path');
+var mime        = require('mime');
+
+// ==
+
+function mkdir(folder) {
+    try {
+        fs.lstatSync(folder);
+    } catch(e) {
+        fs.mkdirSync(folder);
+    }
+}
+
+function touch(file, contents) {
+    try {
+        fs.lstatSync(file)
+    } catch(e) {
+        if (contents) {
+            fs.writeFileSync(file, contents);
+        } else {
+            fs.closeSync(fs.openSync(file, 'w'));
+        }
+    }
+}
+
+function exists(file) {
+    try {
+        fs.lstatSync(file);
+    } catch (e) {
+        return false;
+    }
+
+    return true;
+}
+
+function write(file, json) {
+    fs.writeFileSync(file, JSON.stringify(json, null, 2));
+}
+
+// == Setup home folder
+
+var home = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
+
+switch(os.platform()) {
+    case 'darwin':
+        home += '/Library/Application\ Support/HypeNetwork';
+       break;
+    case 'linux':
+        home += '/.hypenetwork';
+        break;
+    default:
+        home += '\\HypeNetwork';
+}
+
+mkdir(home);
+
+// == Setup preferences
+
+var key = 'xxxxxxxx-xxxxxx-xxxxxx-xxxxxxxx';
+var preferences = home + '/preferences.json';
+touch(preferences, JSON.stringify({
+    target: 'http://up.hype.network',
+    key: key,
+}, null, 2));
+
+// == Read in preferences
+
+var options = JSON.parse(fs.readFileSync(preferences, 'UTF-8'));
+
+// == Check if key has been entered yet
+
+if (!options.key || options.key === key) {
+    var line = read.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+
+    line.question('Please enter key: ', function(key) {
+        line.close();
+        options.key = key;
+        write(preferences, options);
+        start();
+    });
+} else {
+    start();
+}
+
+// == Load in file to be uploaded
+
+function start() {
+    var file = process.argv[2];
+    if (!file) {
+        console.log('No file to be uploaded.');
+    } else {
+        if (!exists(file)) {
+            console.log('The file "' + file + '" does not exist');
+        } else {
+            upload(file);
+        }
+    }
+}
+
+// == Upload
+
+function upload(file) {
+    console.log('Starting to upload "' + file + '" to ' + options.target);
+
+    var data = querystring.stringify({
+        'contents': fs.readFileSync(file, 'base64'),
+        'file': path.basename(file),
+        'type': mime.lookup(file),
+    });
+
+    var opts = {
+        hostname: 'up.hype',
+        port: 8000,
+        path: '/',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Key': options.key,
+        }
+    };
+
+    var req = http.request(opts, function(res) {
+        console.log('STATUS: ' + res.statusCode);
+        console.log('HEADERS: ' + JSON.stringify(res.headers));
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+            console.log('BODY: ' + chunk);
+        });
+    });
+
+    req.on('error', function(e) {
+        console.log('problem with request: ' + e.message);
+    });
+
+    req.write(data);
+    req.end();
+}

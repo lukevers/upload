@@ -1,0 +1,19 @@
+{
+  "name": "upload",
+  "version": "0.0.0",
+  "description": "Upload files to hype.network",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lukevers/upload.git"
+  },
+  "author": "Luke Evers <npm@lukevers.com> (https://lukevers.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lukevers/upload/issues"
+  },
+  "homepage": "https://github.com/lukevers/upload#readme",
+  "dependencies": {
+    "mime": "^1.3.4"
+  }
+}
