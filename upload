@@ -72,6 +72,8 @@ touch(preferences, JSON.stringify({
     target: 'up.hype.network',
     key: key,
     port: 80,
+    path: '/',
+    method: 'POST',
 }, null, 2));
 
 // == Read in preferences
@@ -125,8 +127,8 @@ function upload(file) {
     var opts = {
         hostname: options.target,
         port: options.port,
-        path: '/',
-        method: 'POST',
+        path: options.path,
+        method: options.method,
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-Key': options.key,
@@ -134,11 +136,15 @@ function upload(file) {
     };
 
     var req = http.request(opts, function(res) {
-        console.log('STATUS: ' + res.statusCode);
-        console.log('HEADERS: ' + JSON.stringify(res.headers));
+        if (res.statusCode !== 200) {
+            console.log('ERROR');
+            console.log('STATUS: ' + res.statusCode);
+            console.log('HEADERS: ' + JSON.stringify(res.headers));
+        }
+
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
-            console.log('BODY: ' + chunk);
+            console.log(chunk);
         });
     });
 
